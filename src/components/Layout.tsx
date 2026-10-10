@@ -35,7 +35,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <nav style={{ width: '250px', background: '#f4f4f4', padding: '20px' }}>
+      <nav style={{ width: '250px', background: '#f4f4f4', padding: '20px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
           <img src="/logo.png" alt="Logo" style={{ width: '50px', height: '50px', marginRight: '10px' }} />
           <h2 style={{ margin: 0 }}>Facturation</h2>
@@ -48,7 +48,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             Connecté en tant que : {user?.username}
           </p>
         </div>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul style={{ listStyle: 'none', padding: 0, flex: 1 }}>
           {filteredNavItems.map(item => (
             <li key={item.path} style={{ margin: '10px 0' }}>
               <Link
@@ -73,9 +73,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             router.push('/login');
           }}
           style={{
-            position: 'absolute',
-            bottom: '20px',
-            left: '20px',
+            marginTop: 'auto',
             padding: '10px',
             background: '#f44336',
             color: 'white',
