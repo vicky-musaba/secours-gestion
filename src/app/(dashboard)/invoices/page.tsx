@@ -50,6 +50,8 @@ const InvoicesPage = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [formData, setFormData] = useState({
     client_name: '',
     phone: '',
@@ -522,7 +524,10 @@ const InvoicesPage = () => {
                         {user?.role === 'caissière' && invoice.status === 'sent' && (
                           <>
                             <button
-                              onClick={() => router.push(`/payments/new?invoice=${invoice.id}`)}
+                              onClick={() => {
+                                setSelectedInvoice(invoice);
+                                setShowPaymentModal(true);
+                              }}
                               className="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-sm"
                             >
                               Encaisser
@@ -568,6 +573,89 @@ const InvoicesPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal d'encaissement */}
+      {showPaymentModal && selectedInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">Encaisser la facture #{selectedInvoice.invoice_number}</h3>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">Client: {selectedInvoice.client_name}</p>
+              <p className="text-sm text-gray-600">Montant: {selectedInvoice.final_amount} {selectedInvoice.currency || 'CDF'}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Montant payé</label>
+              <input
+                type="number"
+                defaultValue={selectedInvoice.final_amount}
+                id="paymentAmount"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Méthode de paiement</label>
+              <select
+                id="paymentMethod"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="cash">Espèces</option>
+                <option value="card">Carte</option>
+                <option value="mobile">Mobile Money</option>
+                <option value="bank">Virement bancaire</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Référence (optionnel)</label>
+              <input
+                type="text"
+                id="paymentReference"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSelectedInvoice(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  const amount = (document.getElementById('paymentAmount') as HTMLInputElement).value;
+                  const payment_method = (document.getElementById('paymentMethod') as HTMLSelectElement).value;
+                  const reference = (document.getElementById('paymentReference') as HTMLInputElement).value;
+
+                  try {
+                    await apiCall('/api/payments', {
+                      method: 'POST',
+                      body: JSON.stringify({
+                        invoice_id: selectedInvoice.id,
+                        amount: parseFloat(amount),
+                        amount_paid: parseFloat(amount),
+                        payment_method,
+                        reference,
+                      }),
+                    });
+                    await apiCall(`/api/invoices/${selectedInvoice.id}/pay`, { method: 'PATCH' });
+                    setShowPaymentModal(false);
+                    setSelectedInvoice(null);
+                    fetchInvoices();
+                  } catch (error) {
+                    console.error('Erreur lors de l\'encaissement:', error);
+                    alert('Erreur lors de l\'encaissement');
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Encaisser
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
