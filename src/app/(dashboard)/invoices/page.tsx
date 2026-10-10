@@ -629,17 +629,14 @@ const InvoicesPage = () => {
                   const reference = (document.getElementById('paymentReference') as HTMLInputElement).value;
 
                   try {
-                    await apiCall('/api/payments', {
-                      method: 'POST',
+                    await apiCall(`/api/invoices/${selectedInvoice.id}/pay`, {
+                      method: 'PATCH',
                       body: JSON.stringify({
-                        invoice_id: selectedInvoice.id,
-                        amount: parseFloat(amount),
                         amount_paid: parseFloat(amount),
                         payment_method,
                         reference,
                       }),
                     });
-                    await apiCall(`/api/invoices/${selectedInvoice.id}/pay`, { method: 'PATCH' });
                     setShowPaymentModal(false);
                     setSelectedInvoice(null);
                     fetchInvoices();
