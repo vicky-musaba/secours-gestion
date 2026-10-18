@@ -48,10 +48,10 @@ export async function GET(request: NextRequest) {
     const todayPaymentsResult = await pool.query(todayPaymentsQuery, params);
     const pendingInvoicesResult = await pool.query(pendingInvoicesQuery, params);
 
-    let paymentsByCurrencyQuery = `SELECT currency, COUNT(*) as count, COALESCE(SUM(amount), 0) as total
+    let paymentsByCurrencyQuery = `SELECT i.currency, COUNT(*) as count, COALESCE(SUM(p.amount), 0) as total
                                      FROM payments p
                                      JOIN invoices i ON p.invoice_id = i.id`;
-    let todayPaymentsByCurrencyQuery = `SELECT currency, COUNT(*) as count, COALESCE(SUM(amount), 0) as total
+    let todayPaymentsByCurrencyQuery = `SELECT i.currency, COUNT(*) as count, COALESCE(SUM(p.amount), 0) as total
                                          FROM payments p
                                          JOIN invoices i ON p.invoice_id = i.id
                                          WHERE DATE(p.payment_date) = CURRENT_DATE`;
@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
       todayPaymentsByCurrencyQuery += ' AND i.infographer_id = $1';
     }
 
-    paymentsByCurrencyQuery += ' GROUP BY currency';
-    todayPaymentsByCurrencyQuery += ' GROUP BY currency';
+    paymentsByCurrencyQuery += ' GROUP BY i.currency';
+    todayPaymentsByCurrencyQuery += ' GROUP BY i.currency';
 
     const allPaymentsByCurrencyResult = await pool.query(paymentsByCurrencyQuery, currencyParams);
     const todayPaymentsByCurrencyResult = await pool.query(todayPaymentsByCurrencyQuery, currencyParams);
