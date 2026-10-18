@@ -44,9 +44,11 @@ export async function GET(request: NextRequest) {
       params.push(user.id);
     }
 
+    console.log('Executing pendingInvoicesQuery:', pendingInvoicesQuery, 'params:', params);
     const allPaymentsResult = await pool.query(paymentsQuery, params);
     const todayPaymentsResult = await pool.query(todayPaymentsQuery, params);
     const pendingInvoicesResult = await pool.query(pendingInvoicesQuery, params);
+    console.log('Pending invoices count:', pendingInvoicesResult.rows[0].count);
 
     let paymentsByCurrencyQuery = `SELECT i.currency, COUNT(*) as count, COALESCE(SUM(p.amount), 0) as total
                                      FROM payments p
